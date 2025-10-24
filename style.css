@@ -1,23 +1,1026 @@
-html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background-color: #f0f0f0; /* 앱 바깥 배경색 */
-        }
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #f0f0f0;
+    /* 앱 바깥 배경색 */
+    overflow: hidden; /* 스크롤 방지 */
+}
 
-        /* 2. 375px 너비의 앱 컨테이너 스타일 */
-        #app-container {
-            width: 375px;
-            height: 100vh; /* 뷰포트 전체 높이 */
-            margin: 0 auto; /* 화면 중앙 정렬 */
-            border: 1px solid #ccc; /* 경계선 (선택 사항) */
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* 그림자 (선택 사항) */
-            display: flex; /* 내부 맵을 채우기 위함 */
-            flex-direction: column;
-        }
+/* 2. 375px 너비의 앱 컨테이너 스타일 */
+#app-container {
+    width: 375px;
+    height: 100vh;
+    /* 뷰포트 전체 높이 */
+    margin: 0 auto;
+    /* 화면 중앙 정렬 */
+    border: 1px solid #ccc;
+    /* 경계선 (선택 사항) */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    /* 그림자 (선택 사항) */
+    display: flex;
+    /* 내부 맵을 채우기 위함 */
+    flex-direction: column;
+    position: relative; /* 그라디언트 오버레이를 위한 상대 위치 */
+    overflow: hidden; /* 스크롤 방지 */
+}
 
-        /* 3. 지도가 표시될 div 스타일 */
-        #map {
-            width: 100%; /* 부모(#app-container)의 너비를 꽉 채움 */
-            height: 100%; /* 부모(#app-container)의 높이를 꽉 채움 */
-        }
+/* 3. 지도가 표시될 div 스타일 */
+#map {
+    width: 100%;
+    /* 부모(#app-container)의 너비를 꽉 채움 */
+    height: 100%;
+    /* 부모(#app-container)의 높이를 꽉 채움 */
+    overflow: hidden; /* 스크롤 방지 */
+    position: relative; /* 절대 위치 요소들을 위한 기준점 */
+}
+
+/* 4. 그라디언트 오버레이 스타일 */
+.gradient-overlay {
+    position: absolute;
+    width: 100%;
+    height: 135px;
+    pointer-events: none; /* 지도 상호작용 방해하지 않음 */
+    z-index: 1000;
+    left: 0;
+    right: 0;
+}
+
+#gradient-top {
+    top: 0;
+}
+
+#gradient-bottom {
+    bottom: 0;
+    transform: rotate(180deg); /* 하단은 상단의 180도 회전 */
+}
+
+/* 5. 위치 정보 스타일 */
+#location-info {
+    position: absolute;
+    left: 16px;
+    top: 48px;
+    z-index: 1001; /* 그라디언트보다 위에 표시 */
+    pointer-events: none; /* 지도 상호작용 방해하지 않음 */
+}
+
+#district-info {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+    font-size: 38px;
+    font-weight: 600; /* Semibold */
+    line-height: 140%;
+    color: #111111;
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8); /* 흰색 그림자로 가독성 향상 */
+    margin-bottom: 4px;
+}
+
+#country-info {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+    font-size: 18px;
+    font-weight: 400; /* Regular */
+    line-height: 140%;
+    color: #111111;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8); /* 흰색 그림자로 가독성 향상 */
+}
+
+/* 6. 플래그 버튼 스타일 */
+.flag-btn {
+    position: absolute;
+    bottom: 61px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 58px;
+    height: 58px;
+    background-color: rgba(17, 17, 17, 0.9); /* #111111 90% 투명도 */
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    z-index: 1002; /* 위치 정보보다 위에 표시 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 위치 선택 완료 버튼 스타일 */
+.flag-btn.completed {
+    width: 140px;
+    height: 58px;
+    padding: 0 16px;
+}
+
+.flag-btn:hover {
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.flag-btn:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* 7. 핀 마커 스타일 */
+.custom-pin {
+    background: none !important;
+    border: none !important;
+}
+
+.pin-marker {
+    font-size: 24px;
+    text-align: center;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* 저장된 커스텀 핀 스타일 */
+.custom-saved-pin {
+    background: none !important;
+    border: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.custom-saved-pin div {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.custom-saved-pin .pin-container {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-saved-pin.expanded {
+    z-index: 1000 !important;
+}
+
+/* 핀 호버 효과 */
+.custom-saved-pin:hover {
+    cursor: pointer;
+    transform: scale(1.05);
+}
+
+/* 8. 감정 추가 페이지 스타일 */
+.emotion-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    z-index: 2000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.emotion-page.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.emotion-content {
+    width: 100%;
+    height: 100%;
+    background: rgba(17, 17, 17, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0;
+    padding: 20px;
+    overflow-y: auto;
+    margin: 0;
+    border: none;
+    box-sizing: border-box;
+    max-width: 375px;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    cursor: grab; /* 드래그 가능 커서 */
+}
+
+.emotion-content:active {
+    cursor: grabbing; /* 드래그 중 커서 */
+}
+
+.emotion-content::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+/* 뒤로가기 버튼 */
+.back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 8px;
+    margin-bottom: 20px;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* 위치 헤더 */
+.location-header {
+    margin-bottom: 30px;
+}
+
+.detailed-location {
+    font-size: 24px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 8px;
+    line-height: 1.3;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.page-title {
+    font-size: 16px;
+    color: rgba(179, 175, 232, 0.8);
+    font-weight: 500;
+}
+
+/* 입력 섹션 */
+.input-section {
+    margin-bottom: 30px;
+}
+
+.input-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 12px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.more-btn {
+    background: none;
+    border: none;
+    color: rgba(179, 175, 232, 0.8);
+    font-size: 14px;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.more-btn:hover {
+    color: rgba(179, 175, 232, 1);
+    text-decoration-thickness: 2px;
+}
+
+/* 별명 입력 */
+.nickname-input {
+    width: 100%;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.nickname-input:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(179, 175, 232, 0.5);
+}
+
+.nickname-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* 옵션 그리드 - 가로 스크롤 */
+.option-grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    padding-bottom: 8px;
+    cursor: grab; /* 드래그 가능 커서 */
+}
+
+.option-grid:active {
+    cursor: grabbing; /* 드래그 중 커서 */
+}
+
+.option-grid::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.option-item {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer !important;
+    transition: all 0.2s ease;
+    position: relative;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-width: 80px;
+}
+
+.option-item.selected {
+    background: rgba(76, 175, 80, 0.8);
+    border-color: rgba(76, 175, 80, 0.9);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.option-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.option-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.option-text {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.vote-count {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* 감정 그리드 (4개) - 가로 스크롤 적용 */
+    /* 상속된 가로 스크롤 스타일 사용 */
+
+/* 이야기하기 */
+.story-textarea {
+    width: 100%;
+    min-height: 120px;
+    max-height: 200px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    outline: none;
+    resize: vertical;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.story-textarea:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(179, 175, 232, 0.5);
+}
+
+.story-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* 이미지 업로드 */
+.image-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.image-upload-btn {
+    width: 100%;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.image-upload-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.image-preview {
+    width: 100%;
+    max-height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.2s ease;
+}
+
+.image-preview-remove:hover {
+    background: rgba(244, 67, 54, 0.9);
+    transform: scale(1.1);
+}
+
+/* 등록하기 버튼 */
+.register-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(90deg, #7B9CFF 0%, #5B7FE8 100%);
+    border: none;
+    border-radius: 16px;
+    color: #FFFFFF;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+    box-shadow: 0 4px 12px rgba(91, 127, 232, 0.3);
+    letter-spacing: -0.3px;
+}
+
+.register-btn:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(90deg, #8BADFF 0%, #6B8FFF 100%);
+    box-shadow: 0 6px 16px rgba(91, 127, 232, 0.4);
+}
+
+.register-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(91, 127, 232, 0.3);
+}
+
+/* 바텀 시트 스타일 */
+.bottom-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2500;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.bottom-sheet.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.bottom-sheet.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.sheet-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.bottom-sheet.show .sheet-overlay {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sheet-content {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    width: 100%;
+    max-width: 375px;
+    background: rgba(30, 30, 30, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px 20px 0 0;
+    padding: 0 20px 20px 20px;
+    overflow-x: hidden; /* 가로 스크롤 방지 */
+    overflow-y: hidden; /* 초기에는 세로 스크롤 숨김 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s ease-out;
+    height: 40vh;
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none; /* 드래그와 스크롤 충돌 방지 */
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.sheet-content:active {
+    cursor: grabbing;
+}
+
+.sheet-content::-webkit-scrollbar {
+    display: none;
+}
+
+.bottom-sheet.show .sheet-content {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 드래그 핸들 */
+.sheet-handle-area {
+    padding: 16px 0 12px 0;
+    display: flex;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+}
+
+.sheet-handle-area:active {
+    cursor: grabbing;
+}
+
+.sheet-handle {
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+/* 장소 상세 페이지 스타일 */
+.place-detail-header {
+    margin-bottom: 20px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.place-type-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.place-name {
+    font-size: 32px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+.place-address {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+.detail-section {
+    margin-bottom: 30px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* 태그 스크롤 컨테이너 */
+.tags-scroll-container {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin-top: 12px;
+    cursor: grab;
+    user-select: none;
+}
+
+.tags-scroll-container:active {
+    cursor: grabbing;
+}
+
+.tags-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* 태그 컨테이너 */
+.tags-container {
+    display: flex;
+    gap: 10px;
+    padding-bottom: 4px;
+}
+
+.tag-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.tag-item.selected {
+    background: rgba(76, 175, 80, 0.8);
+    border-color: rgba(76, 175, 80, 0.9);
+}
+
+.tag-emoji {
+    font-size: 20px;
+}
+
+.tag-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tag-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.tag-count {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* 이야기 컨테이너 */
+.stories-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 12px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.story-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.story-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.story-content {
+    flex: 1;
+    min-width: 0; /* flexbox에서 overflow 방지 */
+    max-width: 100%;
+}
+
+.story-header {
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.story-username {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    word-break: break-word;
+}
+
+.story-time {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.story-emotion {
+    font-size: 16px;
+}
+
+.story-text {
+    font-size: 14px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* 댓글 입력 영역 */
+.comment-input-container {
+    margin-top: 20px;
+    position: relative;
+}
+
+.comment-emotion-selector {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    margin-bottom: 8px;
+    background: rgba(30, 30, 30, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 8px;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+}
+
+.comment-emotion-selector.show {
+    display: flex;
+}
+
+.comment-emotion-btn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.comment-emotion-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.comment-emotion-btn.selected {
+    background: rgba(123, 156, 255, 0.2);
+    border-color: rgba(123, 156, 255, 0.5);
+}
+
+.comment-input-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    transition: all 0.2s ease;
+}
+
+.comment-input-area:focus-within {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(123, 156, 255, 0.5);
+}
+
+.comment-emotion-toggle {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    font-size: 20px;
+}
+
+.comment-emotion-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.comment-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    padding: 4px 8px;
+}
+
+.comment-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.comment-submit-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(90deg, #7B9CFF 0%, #5B7FE8 100%);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(91, 127, 232, 0.3);
+}
+
+.comment-submit-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(91, 127, 232, 0.4);
+}
+
+.comment-submit-btn:active {
+    transform: scale(0.95);
+}
+
+.comment-submit-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* 커스텀 옵션 모달 */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.custom-modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 340px;
+    background: rgba(40, 40, 40, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+.custom-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0 0 20px 0;
+    text-align: center;
+}
+
+.custom-modal-body {
+    margin-bottom: 24px;
+}
+
+.custom-emoji-input,
+.custom-name-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    margin-top: 8px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.custom-emoji-input:focus,
+.custom-name-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(123, 156, 255, 0.5);
+}
+
+.custom-emoji-input::placeholder,
+.custom-name-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.custom-modal-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.custom-modal-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-modal-btn.cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.custom-modal-btn.cancel:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.custom-modal-btn.confirm {
+    background: linear-gradient(90deg, #7B9CFF 0%, #5B7FE8 100%);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(91, 127, 232, 0.3);
+}
+
+.custom-modal-btn.confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(91, 127, 232, 0.4);
+}
+
+/* 숨김 클래스 */
+.hidden {
+    display: none !important;
+}
+
+.pin {
+    width: 50px;
+    height: 50px;
+}

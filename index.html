@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -15,12 +15,217 @@
 <body>
     <div id="app-container">
         <div id="map"></div>
+        <div id="gradient-top" class="gradient-overlay"></div>
+        <div id="gradient-bottom" class="gradient-overlay"></div>
+        <div id="location-info">
+            <div id="district-info">강북구 미아동</div>
+            <div id="country-info">대한민국</div>
+        </div>
+        <button id="flag-button" class="flag-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="flagGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#B3AFE8;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#9FCEDB;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <path d="M12 2L13.09 8.26L19 7L13.09 15.74L12 22L10.91 15.74L5 17L10.91 8.26L12 2Z" fill="url(#flagGradient)"/>
+            </svg>
+        </button>
+        
+        <!-- 장소 상세 바텀 시트 -->
+        <div id="place-detail-sheet" class="bottom-sheet hidden">
+            <div class="sheet-overlay"></div>
+            <div class="sheet-content">
+                <!-- 드래그 핸들 -->
+                <div class="sheet-handle-area" id="sheet-handle-area">
+                    <div class="sheet-handle"></div>
+                </div>
+                
+                <!-- 장소 헤더 -->
+                <div class="place-detail-header">
+                    <div class="place-type-badge" id="detail-place-type">회사</div>
+                    <h2 class="place-name" id="detail-place-name">알파코</h2>
+                    <p class="place-address" id="detail-place-address">서울 성동구 성수동2가 289-12</p>
+                </div>
+                
+                <!-- 태그 섹션 -->
+                <div class="detail-section" style="margin-top: 40px;">
+                    <label class="input-label">태그</label>
+                    <div class="tags-scroll-container">
+                        <div class="tags-container" id="detail-tags">
+                            <!-- 태그들이 동적으로 추가됨 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 이 장소에 대해서 섹션 -->
+                <div class="detail-section" style="margin-top: 40px;">
+                    <label class="input-label">이 장소에 대해서</label>
+                    <div class="stories-container" id="detail-stories">
+                        <!-- 이야기들이 동적으로 추가됨 -->
+                    </div>
+                    
+                    <!-- 댓글 입력 영역 -->
+                    <div class="comment-input-container">
+                        <!-- 감정 선택 버튼들 -->
+                        <div class="comment-emotion-selector" id="comment-emotion-selector">
+                            <button class="comment-emotion-btn" data-emotion="happy" data-emoji="😊">😊</button>
+                            <button class="comment-emotion-btn" data-emotion="disgusted" data-emoji="🤢">🤢</button>
+                            <button class="comment-emotion-btn" data-emotion="angry" data-emoji="🔫">🔫</button>
+                            <button class="comment-emotion-btn" data-emotion="surprised" data-emoji="😲">😲</button>
+                        </div>
+                        
+                        <div class="comment-input-area">
+                            <button id="comment-emotion-toggle" class="comment-emotion-toggle">
+                                <span id="selected-comment-emotion">😊</span>
+                            </button>
+                            <input type="text" id="comment-input" class="comment-input" placeholder="댓글을 입력하세요">
+                            <button id="comment-submit-btn" class="comment-submit-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 3L21 12L3 21V13L15 12L3 11V3Z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 감정 추가 페이지 -->
+        <div id="emotion-page" class="emotion-page hidden">
+            <div class="emotion-content">
+                <!-- 뒤로가기 버튼 -->
+                <button id="back-button" class="back-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 18L9 12L15 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                
+                <!-- 상세 위치 및 제목 -->
+                <div class="location-header">
+                    <div id="detailed-location" class="detailed-location">서울 성동구 성수동2가 300-2</div>
+                    <div class="page-title">장소에서 감정 추가</div>
+                </div>
+                
+                <!-- 별명 입력 -->
+                <div class="input-section">
+                    <label class="input-label">이 장소에 대한 별명</label>
+                    <input type="text" id="place-nickname" class="nickname-input" placeholder="별명을 입력해주세요" maxlength="20">
+                </div>
+                
+                <!-- 장소 종류 -->
+                <div class="input-section">
+                    <div class="section-header">
+                        <label class="input-label">장소 종류</label>
+                        <button class="more-btn" id="place-type-more-btn">더보기</button>
+                    </div>
+                    <div class="option-grid" id="place-type-grid">
+                        <div class="option-item" data-type="company">
+                            <div class="option-icon">🏢</div>
+                            <div class="option-text">회사</div>
+                        </div>
+                        <div class="option-item" data-type="school">
+                            <div class="option-icon">🏫</div>
+                            <div class="option-text">학교</div>
+                        </div>
+                        <div class="option-item" data-type="entertainment">
+                            <div class="option-icon">🎠</div>
+                            <div class="option-text">놀거리</div>
+                        </div>
+                        <div class="option-item" data-type="restaurant">
+                            <div class="option-icon">🍽️</div>
+                            <div class="option-text">식당</div>
+                        </div>
+                        <div class="option-item" data-type="other">
+                            <div class="option-icon">🔫</div>
+                            <div class="option-text">기타</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 현재 감정 -->
+                <div class="input-section">
+                    <div class="section-header">
+                        <label class="input-label">지금 느끼는 감정</label>
+                        <button class="more-btn" id="emotion-more-btn">더보기</button>
+                    </div>
+                    <div class="option-grid" id="emotion-grid">
+                        <div class="option-item" data-emotion="happy">
+                            <div class="option-icon">😊</div>
+                            <div class="option-text">행복한</div>
+                        </div>
+                        <div class="option-item" data-emotion="disgusted">
+                            <div class="option-icon">🤢</div>
+                            <div class="option-text">우웩</div>
+                        </div>
+                        <div class="option-item" data-emotion="angry">
+                            <div class="option-icon">🔫</div>
+                            <div class="option-text">화나는</div>
+                        </div>
+                        <div class="option-item" data-emotion="surprised">
+                            <div class="option-icon">😲</div>
+                            <div class="option-text">놀라는</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 이야기하기 -->
+                <div class="input-section">
+                    <label class="input-label">이 장소에 대해 이야기하기</label>
+                    <textarea id="place-story" class="story-textarea" placeholder="이야기를 작성해주세요" maxlength="500"></textarea>
+                </div>
+                
+                <!-- 이미지 업로드 -->
+                <div class="input-section">
+                    <label class="input-label">이미지 추가 (선택)</label>
+                    <div class="image-upload-container">
+                        <input type="file" id="place-image" accept="image/*" style="display: none;">
+                        <button type="button" class="image-upload-btn" id="image-upload-trigger">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="currentColor"/>
+                            </svg>
+                            이미지 선택
+                        </button>
+                        <div id="image-preview" class="image-preview hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- 등록하기 버튼 -->
+                <button id="register-button" class="register-btn">등록하기</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 커스텀 옵션 추가 모달 -->
+    <div id="custom-option-modal" class="custom-modal hidden">
+        <div class="custom-modal-overlay"></div>
+        <div class="custom-modal-content">
+            <h3 class="custom-modal-title" id="custom-modal-title">새로운 장소 종류 추가</h3>
+            <div class="custom-modal-body">
+                <label class="input-label">이모지 선택</label>
+                <input type="text" id="custom-emoji-input" class="custom-emoji-input" placeholder="이모지 입력 (예: 🏠)" maxlength="4">
+                <label class="input-label" style="margin-top: 16px;">이름 입력</label>
+                <input type="text" id="custom-name-input" class="custom-name-input" placeholder="이름 입력 (예: 집)" maxlength="10">
+            </div>
+            <div class="custom-modal-buttons">
+                <button id="custom-modal-cancel" class="custom-modal-btn cancel">취소</button>
+                <button id="custom-modal-confirm" class="custom-modal-btn confirm">추가</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
-     <script src="map.js"></script>
+     <script src="map.js" style="z-index: 0;"></script>
+
+    <div class="pin">
+    <img src="Frame 5.svg" alt="">
+    <div class="pin-bg">
+        <p class="pin-ic">🏢</p>
+    </div>
+</div>
 </body>
 
 </html>
