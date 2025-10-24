@@ -1,0 +1,23 @@
+html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #f0f0f0; /* 앱 바깥 배경색 */
+        }
+
+        /* 2. 375px 너비의 앱 컨테이너 스타일 */
+        #app-container {
+            width: 375px;
+            height: 100vh; /* 뷰포트 전체 높이 */
+            margin: 0 auto; /* 화면 중앙 정렬 */
+            border: 1px solid #ccc; /* 경계선 (선택 사항) */
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* 그림자 (선택 사항) */
+            display: flex; /* 내부 맵을 채우기 위함 */
+            flex-direction: column;
+        }
+
+        /* 3. 지도가 표시될 div 스타일 */
+        #map {
+            width: 100%; /* 부모(#app-container)의 너비를 꽉 채움 */
+            height: 100%; /* 부모(#app-container)의 높이를 꽉 채움 */
+        }
